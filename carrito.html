@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrito | Tech Store</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --border: #374151;
+      --topbar: #0f172a;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    a {
+      color: var(--primary);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--topbar);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .brand a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+    }
+
+    .nav-link:hover {
+      border-color: #6b7280;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .cart-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .cart-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .cart-row h2 {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .cart-row .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .qty-row button {
+      background: var(--topbar);
+      color: var(--text);
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .qty-row button:hover {
+      border-color: #6b7280;
+    }
+
+    .remove-btn {
+      background: transparent;
+      color: var(--danger);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    .summary {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .summary-row.total {
+      font-weight: bold;
+      font-size: 1.15rem;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+
+    .pay-btn {
+      width: 100%;
+      background: var(--primary);
+      color: #052e16;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .pay-btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+      color: #ecfdf5;
+    }
+
+    .pay-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .msg {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .msg.error {
+      display: block;
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+    }
+
+    .msg.info {
+      display: block;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 40px 16px;
+    }
+
+    .empty a {
+      display: inline-block;
+      margin-top: 12px;
+    }
+
+    .pay-dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(15, 23, 42, 0.97);
+      border-top: 1px solid var(--border);
+      z-index: 40;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pay-dock.visible {
+      display: flex;
+    }
+
+    .pay-dock .pay-total {
+      text-align: center;
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    body.has-dock {
+      padding-bottom: 120px;
+    }
+
+    .warn-banner {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      color: #fcd34d;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+
+    .warn-banner button {
+      margin-top: 10px;
+      background: transparent;
+      color: #fcd34d;
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .warn-banner button:hover {
+      background: rgba(251, 191, 36, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="productos.html">Tech Store</a></div>
+    <div class="topbar-right">
+      <a class="nav-link" href="productos.html">Seguir comprando</a>
+      <a class="nav-link" href="login.html">Iniciar sesión</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Carrito</h1>
+    <p class="sub">Pago seguro con Stripe Checkout (modo prueba). No necesitas iniciar sesión.</p>
+
+    <div class="msg error" id="errorMsg" role="alert"></div>
+    <div class="msg info" id="infoMsg"></div>
+
+    <div id="cartRoot"></div>
+
+    <div id="summaryBlock" hidden>
+      <div class="summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="subtotalEl"></span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="totalEl"></span>
+        </div>
+      </div>
+      <button type="button" class="pay-btn" id="payBtn">Pagar con Stripe — ir a la pasarela</button>
+    </div>
+  </main>
+
+  <div class="pay-dock" id="payDock" aria-hidden="true">
+    <div class="pay-total" id="dockTotal"></div>
+    <button type="button" class="pay-btn" id="payBtnDock">Pagar con Stripe</button>
+  </div>
+
+  <script>
+    function getCart() {
+      try {
+        return JSON.parse(localStorage.getItem("cart")) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function setCart(cart) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    const cartRoot = document.getElementById("cartRoot");
+    const summaryBlock = document.getElementById("summaryBlock");
+    const subtotalEl = document.getElementById("subtotalEl");
+    const totalEl = document.getElementById("totalEl");
+    const payBtn = document.getElementById("payBtn");
+    const payBtnDock = document.getElementById("payBtnDock");
+    const payDock = document.getElementById("payDock");
+    const dockTotal = document.getElementById("dockTotal");
+    const errorMsg = document.getElementById("errorMsg");
+    const infoMsg = document.getElementById("infoMsg");
+
+    function money(n) {
+      return n.toLocaleString("es-MX", { style: "currency", currency: "USD" });
+    }
+
+    function validLine(item) {
+      return item && item.priceId && item.name && Number(item.price) >= 0;
+    }
+
+    async function repairCartFromStripe() {
+      let cart = getCart();
+      if (!cart.length) return;
+      const needsPrice = cart.some((i) => !i.priceId);
+      if (!needsPrice) return;
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) return;
+        const data = await res.json();
+        const products = data.products || [];
+        const byId = Object.fromEntries(products.map((p) => [p.id, p]));
+        let changed = false;
+        const next = cart.map((item) => {
+          if (item.priceId) return item;
+          const p = byId[item.id];
+          if (p) {
+            changed = true;
+            return {
+              id: p.id,
+              priceId: p.priceId,
+              name: p.name,
+              price: p.amountCents / 100,
+              quantity: Math.min(99, Math.max(1, Number(item.quantity) || 1)),
+            };
+          }
+          return item;
+        });
+        if (changed) setCart(next);
+      } catch (_) {
+        /* sin backend o file:// */
+      }
+    }
+
+    function render() {
+      infoMsg.style.display = "none";
+
+      const rawCart = getCart();
+      let cart = rawCart.filter(validLine);
+
+      if (rawCart.length && cart.length === 0) {
+        summaryBlock.hidden = true;
+        payDock.classList.remove("visible");
+        payDock.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("has-dock");
+        cartRoot.innerHTML = `
+          <div class="warn-banner">
+            Los productos del carrito no tienen precio de Stripe (por ejemplo, eran la demo antigua con ids p1, p2…).
+            Vacía el carrito y vuelve a añadirlos desde el catálogo con el servidor <strong>python app.py</strong> en marcha.
+            <br /><button type="button" id="clearStaleBtn">Vaciar carrito</button>
+          </div>
+          <div class="empty"><a href="productos.html">Ir al catálogo</a></div>`;
+        document.getElementById("clearStaleBtn").addEventListener("click", () => {
+          setCart([]);
+          render();
+        });
+        return;
+      }
+
+      if (cart.length !== rawCart.length) {
+        setCart(cart);
+        infoMsg.textContent =
+          "Se quitaron líneas inválidas (sin priceId de Stripe).";
+        infoMsg.style.display = "block";
+      }
+
+      if (!cart.length) {
+        summaryBlock.hidden = true;
+        payDock.classList.remove("visible");
+        payDock.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("has-dock");
+        cartRoot.innerHTML =
+          '<div class="empty">Tu carrito está vacío.<br /><a href="productos.html">Ver productos</a></div>';
+        return;
+      }
+
+      cartRoot.innerHTML = "";
+      cart.forEach((item, index) => {
+        const row = document.createElement("div");
+        row.className = "cart-row";
+        const left = document.createElement("div");
+        const title = document.createElement("h2");
+        title.textContent = item.name;
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${money(item.price)} c/u`;
+        left.append(title, meta);
+
+        const right = document.createElement("div");
+        const qtyRow = document.createElement("div");
+        qtyRow.className = "qty-row";
+
+        const minus = document.createElement("button");
+        minus.type = "button";
+        minus.textContent = "−";
+        minus.setAttribute("aria-label", "Menos");
+        minus.addEventListener("click", () => {
+          const c = getCart();
+          if (c[index].quantity > 1) c[index].quantity -= 1;
+          else c.splice(index, 1);
+          setCart(c);
+          render();
+        });
+
+        const count = document.createElement("span");
+        count.textContent = String(item.quantity);
+
+        const plus = document.createElement("button");
+        plus.type = "button";
+        plus.textContent = "+";
+        plus.setAttribute("aria-label", "Más");
+        plus.addEventListener("click", () => {
+          const c = getCart();
+          if (c[index].quantity < 99) c[index].quantity += 1;
+          setCart(c);
+          render();
+        });
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-btn";
+        remove.textContent = "Quitar";
+        remove.addEventListener("click", () => {
+          const c = getCart();
+          c.splice(index, 1);
+          setCart(c);
+          render();
+        });
+
+        qtyRow.append(minus, count, plus, remove);
+        right.append(qtyRow);
+        row.append(left, right);
+        cartRoot.appendChild(row);
+      });
+
+      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      subtotalEl.textContent = money(subtotal);
+      totalEl.textContent = money(subtotal);
+      dockTotal.textContent = "Total " + money(subtotal);
+      summaryBlock.removeAttribute("hidden");
+      summaryBlock.hidden = false;
+      payDock.classList.add("visible");
+      payDock.setAttribute("aria-hidden", "false");
+      document.body.classList.add("has-dock");
+    }
+
+    async function readApiResponse(res) {
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {
+          error:
+            (text && String(text).trim().slice(0, 400)) ||
+            "El servidor no devolvió JSON (¿ruta o método incorrecto?).",
+        };
+      }
+      return { data, text };
+    }
+
+    function formatStripeError(data) {
+      let m = data.error || "No se pudo iniciar el pago.";
+      if (data.stripe_code) m += " [Stripe: " + data.stripe_code + "]";
+      if (data.stripe_type) m += " (" + data.stripe_type + ")";
+      if (data.stripe_doc) m += " " + data.stripe_doc;
+      return m;
+    }
+
+    async function startCheckout() {
+      const cart = getCart().filter(validLine);
+      if (!cart.length) return;
+
+      errorMsg.textContent = "";
+      errorMsg.classList.add("error");
+      errorMsg.style.display = "none";
+      payBtn.disabled = true;
+      payBtnDock.disabled = true;
+      payBtn.textContent = "Redirigiendo a Stripe…";
+      payBtnDock.textContent = "Redirigiendo…";
+
+      try {
+        const res = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            line_items: cart.map((i) => ({
+              price: i.priceId,
+              quantity: i.quantity,
+            })),
+            cancel_path: "/carrito.html",
+          }),
+        });
+        const { data } = await readApiResponse(res);
+        if (!res.ok) {
+          throw new Error(formatStripeError(data));
+        }
+        if (!data.url) {
+          throw new Error(formatStripeError(data));
+        }
+        window.location.href = data.url;
+      } catch (e) {
+        let msg =
+          e.message ||
+          "No hay conexión con el servidor. ¿Abriste la tienda con python app.py (puerto 8000) y no con file:// ni solo http.server?";
+        if (e instanceof TypeError && e.message === "Failed to fetch") {
+          msg =
+            "No se pudo conectar al backend. Arranca en la carpeta del proyecto: python app.py y entra por http://127.0.0.1:8000/carrito.html";
+        }
+        errorMsg.textContent = msg;
+        errorMsg.classList.add("error");
+        errorMsg.style.display = "block";
+        errorMsg.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        payBtn.disabled = false;
+        payBtnDock.disabled = false;
+        payBtn.textContent = "Pagar con Stripe — ir a la pasarela";
+        payBtnDock.textContent = "Pagar con Stripe";
+      }
+    }
+
+    payBtn.addEventListener("click", startCheckout);
+    payBtnDock.addEventListener("click", startCheckout);
+
+    (async () => {
+      await repairCartFromStripe();
+      render();
+    })();
+  </script>
+</body>
+</html>

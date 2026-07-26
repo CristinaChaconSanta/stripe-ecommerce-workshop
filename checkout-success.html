@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pago correcto | Tech Store</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --primary: #22c55e;
+      --border: #374151;
+      --topbar: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--topbar);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+    }
+
+    .brand a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .amount {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--text);
+      margin: 16px 0;
+    }
+
+    a.cta {
+      display: inline-block;
+      margin-top: 16px;
+      background: var(--primary);
+      color: #052e16;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 12px 20px;
+      border-radius: 8px;
+    }
+
+    a.cta:hover {
+      filter: brightness(1.08);
+    }
+
+    .err {
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><a href="productos.html">Tech Store</a></div>
+  </header>
+
+  <main class="container">
+    <div class="card" id="panel">
+      <p id="statusText">Verificando pago…</p>
+    </div>
+  </main>
+
+  <script>
+    const panel = document.getElementById("panel");
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+
+    function moneyFromStripe(cents, currency) {
+      if (cents == null) return "—";
+      const cur = (currency || "usd").toUpperCase();
+      return (cents / 100).toLocaleString("es-MX", { style: "currency", currency: cur });
+    }
+
+    function showStatic(html) {
+      panel.innerHTML = html;
+    }
+
+    (async () => {
+      if (!sessionId) {
+        showStatic(
+          '<h1 class="err">Sesión no encontrada</h1><p>Falta el identificador de pago en la URL.</p><a class="cta" href="carrito.html">Volver al carrito</a>'
+        );
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          "/api/checkout-session?session_id=" + encodeURIComponent(sessionId)
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || "No se pudo verificar el pago.");
+        }
+
+        const ok =
+          data.payment_status === "paid" || data.payment_status === "no_payment_required";
+        if (ok) {
+          try {
+            localStorage.removeItem("cart");
+          } catch (_) {}
+
+          panel.textContent = "";
+          const h1 = document.createElement("h1");
+          h1.textContent = "¡Gracias por tu compra!";
+          const p1 = document.createElement("p");
+          p1.textContent = "El pago se completó en modo prueba de Stripe.";
+          panel.append(h1, p1);
+          if (data.amount_total != null) {
+            const amt = document.createElement("p");
+            amt.className = "amount";
+            amt.textContent =
+              "Total: " + moneyFromStripe(data.amount_total, data.currency);
+            panel.append(amt);
+          }
+          if (data.customer_email) {
+            const em = document.createElement("p");
+            em.textContent = "Correo: " + data.customer_email;
+            panel.append(em);
+          }
+          const hint = document.createElement("p");
+          hint.style.fontSize = "0.9rem";
+          hint.textContent =
+            "En pruebas puedes usar la tarjeta 4242 4242 4242 4242.";
+          const cta = document.createElement("a");
+          cta.className = "cta";
+          cta.href = "productos.html";
+          cta.textContent = "Seguir comprando";
+          panel.append(hint, cta);
+        } else {
+          panel.textContent = "";
+          const h1 = document.createElement("h1");
+          h1.className = "err";
+          h1.textContent = "Pago pendiente";
+          const p = document.createElement("p");
+          p.textContent = "Estado: " + (data.payment_status || "desconocido");
+          const cta = document.createElement("a");
+          cta.className = "cta";
+          cta.href = "carrito.html";
+          cta.textContent = "Volver al carrito";
+          panel.append(h1, p, cta);
+        }
+      } catch (e) {
+        panel.textContent = "";
+        const h1 = document.createElement("h1");
+        h1.className = "err";
+        h1.textContent = "Error";
+        const p = document.createElement("p");
+        p.textContent = e.message || "Intenta de nuevo.";
+        const cta = document.createElement("a");
+        cta.className = "cta";
+        cta.href = "productos.html";
+        cta.textContent = "Ir al inicio";
+        panel.append(h1, p, cta);
+      }
+    })();
+  </script>
+</body>
+</html>

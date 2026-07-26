@@ -1,0 +1,14 @@
+﻿.env
+.env.*
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.cursor/
+
+/*
+!/.gitignore
+!/app.py
+!/agent.md
+!/requirements.txt
+!/*.html

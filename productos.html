@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos | Tech Store</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --border: #374151;
+      --topbar: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--topbar);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+    }
+
+    .brand {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .header {
+      margin-bottom: 18px;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-image {
+      height: 150px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #1f2937, #111827);
+      font-size: 2.2rem;
+      overflow: hidden;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .catalog-status {
+      color: var(--muted);
+      margin-bottom: 12px;
+      min-height: 1.35em;
+    }
+
+    .catalog-status.error {
+      color: #f87171;
+    }
+
+    .product-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .name {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .desc {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.35;
+      flex: 1;
+    }
+
+    .price {
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+
+    .add-btn {
+      background: var(--primary);
+      color: #052e16;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .add-btn:hover {
+      background: var(--primary-hover);
+      color: #ecfdf5;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .quick-btn {
+      background: transparent;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .quick-btn:hover:not(:disabled) {
+      background: rgba(34, 197, 94, 0.12);
+    }
+
+    .quick-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #16a34a;
+      color: #ecfdf5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+    }
+
+    .nav-link:hover {
+      border-color: #6b7280;
+    }
+
+    .cart-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: #052e16;
+      font-size: 0.75rem;
+      font-weight: bold;
+      min-width: 1.25rem;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .cart-badge:empty {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Tech Store</div>
+    <div class="topbar-right">
+      <a class="nav-link" href="carrito.html">Carrito<span class="cart-badge" id="cartBadge" aria-live="polite"></span></a>
+      <a class="nav-link" href="login.html">Iniciar sesión</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="header">
+      <h1>Catálogo de productos</h1>
+      <p>Selecciona tus productos de tecnología favoritos. Inventario sincronizado con Stripe. El pago se hace en <strong>Carrito</strong> con Stripe Checkout (servidor <code>python app.py</code>).</p>
+    </section>
+
+    <p class="catalog-status" id="catalogStatus" aria-live="polite"></p>
+    <section class="grid" id="productsGrid"></section>
+  </main>
+
+  <div class="toast" id="toast">Producto agregado al carrito</div>
+
+  <script>
+    const grid = document.getElementById("productsGrid");
+    const toast = document.getElementById("toast");
+    const catalogStatus = document.getElementById("catalogStatus");
+
+    function getCart() {
+      return JSON.parse(localStorage.getItem("cart")) || [];
+    }
+
+    function setCart(cart) {
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const cart = getCart();
+      const n = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const badge = document.getElementById("cartBadge");
+      badge.textContent = n > 0 ? String(n) : "";
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 1400);
+    }
+
+    async function readApiResponse(res) {
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {
+          error:
+            (text && String(text).trim().slice(0, 400)) ||
+            "Respuesta inválida del servidor.",
+        };
+      }
+      return { data };
+    }
+
+    function formatStripeError(data) {
+      let m = data.error || "No se pudo iniciar el pago.";
+      if (data.stripe_code) m += " [Stripe: " + data.stripe_code + "]";
+      if (data.stripe_doc) m += " " + data.stripe_doc;
+      return m;
+    }
+
+    async function quickCheckout(product, button) {
+      button.disabled = true;
+      const prev = button.textContent;
+      button.textContent = "Abriendo Stripe…";
+      try {
+        const res = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            line_items: [{ price: product.priceId, quantity: 1 }],
+            cancel_path: "/productos.html",
+          }),
+        });
+        const { data } = await readApiResponse(res);
+        if (!res.ok) {
+          throw new Error(formatStripeError(data));
+        }
+        if (!data.url) {
+          throw new Error(formatStripeError(data));
+        }
+        window.location.href = data.url;
+      } catch (e) {
+        let msg = e.message || "Error de red.";
+        if (e instanceof TypeError && e.message === "Failed to fetch") {
+          msg =
+            "Sin conexión al backend. Usa python app.py y http://127.0.0.1:8000/productos.html";
+        }
+        catalogStatus.textContent = msg;
+        catalogStatus.classList.add("error");
+        button.disabled = false;
+        button.textContent = prev;
+      }
+    }
+
+    function addToCart(product) {
+      const cart = getCart();
+      const existing = cart.find((item) => item.id === product.id);
+
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({
+          id: product.id,
+          priceId: product.priceId,
+          name: product.name,
+          price: product.amountCents / 100,
+          quantity: 1
+        });
+      }
+
+      setCart(cart);
+      showToast(product.name + " agregado al carrito");
+    }
+
+    function buildProductCard(product) {
+      const card = document.createElement("article");
+      card.className = "product-card";
+
+      const imageWrap = document.createElement("div");
+      imageWrap.className = "product-image";
+      if (product.images && product.images[0]) {
+        const img = document.createElement("img");
+        img.src = product.images[0];
+        img.alt = product.name;
+        img.loading = "lazy";
+        imageWrap.appendChild(img);
+      } else {
+        const fallback = document.createElement("span");
+        fallback.textContent = "📦";
+        imageWrap.appendChild(fallback);
+      }
+
+      const body = document.createElement("div");
+      body.className = "product-body";
+
+      const title = document.createElement("h2");
+      title.className = "name";
+      title.textContent = product.name;
+
+      const desc = document.createElement("p");
+      desc.className = "desc";
+      desc.textContent = product.description || "Sin descripción.";
+
+      const priceEl = document.createElement("p");
+      priceEl.className = "price";
+      priceEl.textContent = product.formattedPrice;
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "add-btn";
+      button.textContent = "Agregar al carrito";
+      button.addEventListener("click", () => addToCart(product));
+
+      const quickBtn = document.createElement("button");
+      quickBtn.type = "button";
+      quickBtn.className = "quick-btn";
+      quickBtn.textContent = "Compra rápida (Stripe)";
+      quickBtn.addEventListener("click", () => quickCheckout(product, quickBtn));
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      actions.append(button, quickBtn);
+
+      body.append(title, desc, priceEl, actions);
+      card.append(imageWrap, body);
+      return card;
+    }
+
+    async function loadCatalog() {
+      catalogStatus.textContent = "Cargando productos desde Stripe…";
+      catalogStatus.classList.remove("error");
+      grid.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || res.statusText);
+        }
+        const list = data.products || [];
+        if (!list.length) {
+          catalogStatus.textContent =
+            "No hay productos activos con precio en Stripe. Crea productos y precios en el Dashboard.";
+          return;
+        }
+        catalogStatus.textContent = "";
+        list.forEach((p) => grid.appendChild(buildProductCard(p)));
+      } catch {
+        catalogStatus.textContent =
+          "No se pudo cargar el catálogo. Arranca el backend con: python app.py (puerto 8000) y abre la tienda desde ese servidor, no con python -m http.server.";
+        catalogStatus.classList.add("error");
+      }
+    }
+
+    updateCartBadge();
+    loadCatalog();
+  </script>
+</body>
+</html>
